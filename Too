@@ -1,0 +1,152 @@
+-- ==========================================
+-- Script: yuu hnb (Steal Eggs / ขโมยไข่)
+-- UI Framework: Rayfield Interface Suite
+-- ==========================================
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "yuu hnb | ขโมยไข่",
+   LoadingTitle = "yuu hnb Hub Loading...",
+   LoadingSubtitle = "by Expert Hub",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   Discord = {
+      Enabled = false
+   },
+   KeySystem = false
+})
+
+-- 변수 설정 (Variables)
+local FastE_Enabled = false
+local LowFPS_Enabled = false
+local EggESP_Enabled = false
+
+-- ==========================================
+-- Tab 1: ฟังก์ชันหลัก (Main Features)
+-- ==========================================
+local MainTab = Window:CreateTab("ฟังก์ชันหลัก", 4483362458)
+
+MainTab:CreateToggle({
+   Name = "หยิบของเร็ว (Fast E Prompt)",
+   CurrentValue = false,
+   Flag = "FastEToggle",
+   Callback = function(Value)
+      FastE_Enabled = Value
+   end,
+})
+
+-- ระบบหยิบของเร็ว (ลด HoldDuration ของ ProximityPrompt ให้เป็น 0)
+task.spawn(function()
+   while task.wait(0.1) do
+      if FastE_Enabled then
+         for _, prompt in pairs(workspace:GetDescendants()) do
+            if prompt:IsA("ProximityPrompt") then
+               prompt.HoldDuration = 0
+            end
+         end
+      end
+   end
+end)
+
+-- ==========================================
+-- Tab 2: ประสิทธิภาพ & ระบบไข่ (Performance & Eggs)
+-- ==========================================
+local MiscTab = Window:CreateTab("เพิ่มประสิทธิภาพ & ไข่", 4483362458)
+
+MiscTab:CreateToggle({
+   Name = "ลด FPS (ลดความค้าง / กระตุก)",
+   CurrentValue = false,
+   Flag = "LowFPSToggle",
+   Callback = function(Value)
+      LowFPS_Enabled = Value
+      if LowFPS_Enabled then
+         -- ลบเอฟเฟกต์และลดรายละเอียดของฉาก
+         for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and not v:IsA("MeshPart") then
+               v.Material = Enum.Material.SmoothPlastic
+               v.Reflectance = 0
+            elseif v:IsA("Decal") or v:IsA("Texture") then
+               v:Destroy()
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+               v.Enabled = false
+            end
+         end
+         setfpscap(60)
+         Rayfield:Notify({Title = "yuu hnb", Content = "เปิดโหมดลดภาพกระตุกแล้ว", Duration = 3})
+      end
+   end,
+})
+
+MiscTab:CreateToggle({
+   Name = "มองเห็นไข่ (น้ำหนัก & ราคา)",
+   CurrentValue = false,
+   Flag = "EggESPToggle",
+   Callback = function(Value)
+      EggESP_Enabled = Value
+      if not EggESP_Enabled then
+         -- ลบ BillboardGui เมื่อปิดการทำงาน
+         for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BillboardGui") and v.Name == "EggESP_yuu" then
+               v:Destroy()
+            end
+         end
+      end
+   end,
+})
+
+-- ระบบแสดงผลข้อมูลบนไข่ (ESP)
+task.spawn(function()
+   while task.wait(1) do
+      if EggESP_Enabled then
+         for _, obj in pairs(workspace:GetDescendants()) do
+            -- ค้นหาวัตถุที่มีชื่อเกี่ยวกับ "Egg" หรือมี Attributes
+            if obj:IsA("BasePart") or obj:IsA("Model") then
+               local name = obj.Name:lower()
+               if name:find("egg") or name:find("ไข่") then
+                  local targetPart = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")) or obj
+                  
+                  if targetPart and not targetPart:FindFirstChild("EggESP_yuu") then
+                     -- ดึงค่า Attributes หรือค่าจำลอง (ปรับเปลี่ยนตามค่าจริงในเกม)
+                     local weight = obj:GetAttribute("Weight") or obj:FindFirstChild("Weight") and obj.Weight.Value or "???"
+                     local price = obj:GetAttribute("Price") or obj:FindFirstChild("Price") and obj.Price.Value or "???"
+
+                     local billboard = Instance.new("BillboardGui")
+                     billboard.Name = "EggESP_yuu"
+                     billboard.AlwaysOnTop = true
+                     billboard.Size = UDim2.new(0, 150, 0, 50)
+                     billboard.StudsOffset = Vector3.new(0, 2, 0)
+                     billboard.Parent = targetPart
+
+                     local label = Instance.new("TextLabel")
+                     label.Size = UDim2.new(1, 0, 1, 0)
+                     label.BackgroundTransparency = 1
+                     label.TextColor3 = Color3.fromRGB(255, 255, 0)
+                     label.TextStrokeTransparency = 0
+                     label.TextScaled = true
+                     label.Text = "🥚 " .. obj.Name .. "\n⚖️ น้ำหนัก: " .. tostring(weight) .. "\n💰 ราคา: " .. tostring(price)
+                     label.Parent = billboard
+                  end
+               end
+            end
+         end
+      end
+   end
+end)
+
+-- ==========================================
+-- ปุ่มปิดเมนู UI (Destroy GUI)
+-- ==========================================
+MiscTab:CreateButton({
+   Name = "ปิดเมนูสคริปต์ (Close UI)",
+   Callback = function()
+      Rayfield:Destroy()
+   end,
+})
+
+Rayfield:Notify({
+   Title = "yuu hnb",
+   Content = "โหลดสคริปต์สำเร็จ! กดปุ่มที่ตั้งไว้เพื่อเปิด/ปิดหน้าต่าง",
+   Duration = 5
+})
